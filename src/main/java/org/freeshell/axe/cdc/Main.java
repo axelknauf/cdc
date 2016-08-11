@@ -7,59 +7,82 @@ import javax.swing.*;
 
 public class Main {
 
-  public static void main(String[] argv) {
-    if (!SystemTray.isSupported()) {
-      System.err.println("SystemTray is not supported, exiting.");
-      System.exit(1);
-    }
-    SwingUtilities.invokeLater(new Runnable() {
-      public void run() {
-        createAndShowGUI();
-      }
-    });
-  }
+    public static void main(String[] argv) {
+        // Sanity check, if OS supports system tray
+        if (!SystemTray.isSupported()) {
+            System.err.println("SystemTray is not supported, exiting.");
+            System.exit(1);
+        }
 
-  private static void createAndShowGUI() {
-    final PopupMenu popup = new PopupMenu();
+        // Put UI on event-dispatching thread
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                try {
+                    createAndShowGUI();
+                } catch (AWTException e) {
+                    System.err.println("System tray not available, exiting.");
+                }
+            }
+        });
+    }
+
+    private static void createAndShowGUI() throws AWTException {
+        final SystemTray tray = SystemTray.getSystemTray();
+
+        // Create inner items
+        final PopupMenu popup = new PopupMenu();
+        final TrayIcon trayIcon = getTrayIcon();
+        assert trayIcon != null;
+
+        // Create contents and add items
+        MenuItem exitItem = new MenuItem("Exit");
+        popup.add(exitItem);
+        trayIcon.setPopupMenu(popup);
+        tray.add(trayIcon);
+
+        // Action listeners
+        trayIcon.addActionListener(e -> JOptionPane.showMessageDialog(null, "Hello, world!"));
+        exitItem.addActionListener(e -> {
+            tray.remove(trayIcon);
+            System.exit(0);
+        });
+    }
+
     // FIXME: replace with own icon
-    final TrayIcon trayIcon =
-      new TrayIcon(createImage("/images/bulb.gif", "tray icon"));
-    final SystemTray tray = SystemTray.getSystemTray();
-
-    MenuItem exitItem = new MenuItem("Exit");
-    popup.add(exitItem);
-    trayIcon.setPopupMenu(popup);
-
-    try {
-      tray.add(trayIcon);
-    } catch (AWTException e) {
-      System.err.println("TrayIcon could not be added.");
-      return;
+    // FIXME: replace with property pointing to arbitrary icon / make configurable for user
+    private static TrayIcon getTrayIcon() {
+        Image image = createImage("/images/bulb.gif", "tray icon");
+        TrayIcon trayIcon = null;
+        if (image != null) {
+            trayIcon = new TrayIcon(image);
+        }
+        else {
+            System.err.println("Icon cannot be found, exiting.");
+            System.exit(3);
+        }
+        return trayIcon;
     }
-    trayIcon.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        JOptionPane.showMessageDialog(null,
-            "This dialog box is run from System Tray");
-      }
-    });
 
-    exitItem.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        tray.remove(trayIcon);
-        System.exit(0);
-      }
-    });
-  }
+    /**
+     * Creates an Image object from the given path location, reading an
+     * icon.
+     *
+     * @param path the filesystem path to the icon file
+     * @param description the optional description, may be null
+     *
+     * @return the Image object representing the icon
+     *
+     * @see ImageIcon#ImageIcon(URL, String)
+     */
+    protected static Image createImage(String path, String description) {
+        URL imageURL = Main.class.getResource(path);
 
-  protected static Image createImage(String path, String description) {
-    URL imageURL = Main.class.getResource(path);
-
-    if (imageURL == null) {
-      System.err.println("Resource not found: " + path);
-      return null;
-    } else {
-      return (new ImageIcon(imageURL, description)).getImage();
+        if (imageURL == null) {
+            System.err.println("Resource not found: " + path);
+            return null;
+        } else {
+            return (new ImageIcon(imageURL, description)).getImage();
+        }
     }
-  }
 
 }
