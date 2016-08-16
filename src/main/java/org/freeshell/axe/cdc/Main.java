@@ -49,19 +49,39 @@ public class Main {
             System.exit(0);
         });
         startTimer.addActionListener(e -> {
-            SwingWorker worker = new SwingWorker() {
-                @Override
-                protected Void doInBackground() throws Exception {
-                    Timer timeout = new Timer(3000, e -> {
-                        JOptionPane.showMessageDialog(null, "Timeout expired!");
-                    });
-                    timeout.setRepeats(false);
-                    timeout.start();
-                    return null;
-                }
-            };
+            SwingWorker worker = createTimeoutWorker(3000, "Timeout expired!", 0);
             worker.execute();
         });
+    }
+
+    /**
+     * Creates a new instance of {@link SwingWorker} executing a Swing timer with the
+     * specified parameters.
+     *
+     * TODO use arbitrary finish action instead of JOptionPane message
+     * TODO make parameters configurable in UI (wizard?)
+     *
+     * @param delaySecs how long the timer shall wait until firing in seconds
+     * @param finishMessage which message to display when finished
+     * @param repeatDelay if the timeout shall be repeated, set this to > 0, given in seconds.
+     *                    
+     * @return the {@link SwingWorker} instance
+     */
+    private static SwingWorker createTimeoutWorker(final int delaySecs, String finishMessage, int repeatDelay) {
+        return new SwingWorker() {
+                    @Override
+                    protected Void doInBackground() throws Exception {
+                        Timer timeout = new Timer(delaySecs, e -> {
+                            JOptionPane.showMessageDialog(null, finishMessage);
+                        });
+                        timeout.setRepeats(repeatDelay > 0);
+                        if (repeatDelay > 0) {
+                            timeout.setDelay(repeatDelay);
+                        }
+                        timeout.start();
+                        return null;
+                    }
+                };
     }
 
     // FIXME: replace with own icon
