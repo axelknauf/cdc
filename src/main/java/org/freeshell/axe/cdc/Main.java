@@ -36,7 +36,9 @@ public class Main {
 
         // Create contents and add items
         MenuItem exitItem = new MenuItem("Exit");
+        MenuItem startTimer = new MenuItem("Start timer");
         popup.add(exitItem);
+        popup.add(startTimer);
         trayIcon.setPopupMenu(popup);
         tray.add(trayIcon);
 
@@ -45,6 +47,20 @@ public class Main {
         exitItem.addActionListener(e -> {
             tray.remove(trayIcon);
             System.exit(0);
+        });
+        startTimer.addActionListener(e -> {
+            SwingWorker worker = new SwingWorker() {
+                @Override
+                protected Void doInBackground() throws Exception {
+                    Timer timeout = new Timer(3000, e -> {
+                        JOptionPane.showMessageDialog(null, "Timeout expired!");
+                    });
+                    timeout.setRepeats(false);
+                    timeout.start();
+                    return null;
+                }
+            };
+            worker.execute();
         });
     }
 
@@ -74,7 +90,7 @@ public class Main {
      *
      * @see ImageIcon#ImageIcon(URL, String)
      */
-    protected static Image createImage(String path, String description) {
+    private static Image createImage(String path, String description) {
         URL imageURL = Main.class.getResource(path);
 
         if (imageURL == null) {
