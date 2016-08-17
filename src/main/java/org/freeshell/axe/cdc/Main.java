@@ -2,6 +2,7 @@ package org.freeshell.axe.cdc;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.image.BufferedImage;
 import java.net.URL;
 import javax.swing.*;
 
@@ -29,16 +30,17 @@ public class Main {
     private static void createAndShowGUI() throws AWTException {
         final SystemTray tray = SystemTray.getSystemTray();
 
+        Dimension trayIconSize = tray.getTrayIconSize();
+
         // Create inner items
         final PopupMenu popup = new PopupMenu();
-        final TrayIcon trayIcon = getTrayIcon();
-        assert trayIcon != null;
+        TrayIcon trayIcon = new TrayIcon(createImage(trayIconSize));
 
         // Create contents and add items
         MenuItem exitItem = new MenuItem("Exit");
         MenuItem startTimer = new MenuItem("Start timer");
-        popup.add(exitItem);
         popup.add(startTimer);
+        popup.add(exitItem);
         trayIcon.setPopupMenu(popup);
         tray.add(trayIcon);
 
@@ -64,7 +66,7 @@ public class Main {
      * @param delaySecs how long the timer shall wait until firing in seconds
      * @param finishMessage which message to display when finished
      * @param repeatDelay if the timeout shall be repeated, set this to > 0, given in seconds.
-     *                    
+     *
      * @return the {@link SwingWorker} instance
      */
     private static SwingWorker createTimeoutWorker(final int delaySecs, String finishMessage, int repeatDelay) {
@@ -84,41 +86,30 @@ public class Main {
                 };
     }
 
-    // FIXME: replace with own icon
-    // FIXME: replace with property pointing to arbitrary icon / make configurable for user
-    private static TrayIcon getTrayIcon() {
-        Image image = createImage("/images/bulb.gif", "tray icon");
-        TrayIcon trayIcon = null;
-        if (image != null) {
-            trayIcon = new TrayIcon(image);
-        }
-        else {
-            System.err.println("Icon cannot be found, exiting.");
-            System.exit(3);
-        }
-        return trayIcon;
-    }
-
     /**
-     * Creates an Image object from the given path location, reading an
-     * icon.
+     * Creates a tray icon for the give size dimensions.
      *
-     * @param path the filesystem path to the icon file
-     * @param description the optional description, may be null
+     * @param trayIconSize the system tray's dimension
      *
-     * @return the Image object representing the icon
-     *
-     * @see ImageIcon#ImageIcon(URL, String)
+     * @return a generated image
      */
-    private static Image createImage(String path, String description) {
-        URL imageURL = Main.class.getResource(path);
+    private static Image createImage(Dimension trayIconSize) {
+        int w = (int) trayIconSize.getWidth();
+        int h = (int) trayIconSize.getHeight();
 
-        if (imageURL == null) {
-            System.err.println("Resource not found: " + path);
-            return null;
-        } else {
-            return (new ImageIcon(imageURL, description)).getImage();
-        }
+        Image image = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+
+        Graphics graphics = image.getGraphics();
+
+        graphics.setColor(Color.GREEN);
+        graphics.fillRect(0, 0, w, h);
+
+        graphics.setColor(Color.RED);
+        graphics.fillArc(w / 2, h / 2, (w / 2) - (w / 10) , (h / 2) - (h / 10), 0, 360);
+
+        image.flush();
+
+        return image;
     }
 
 }
