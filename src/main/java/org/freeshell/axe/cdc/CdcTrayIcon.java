@@ -9,6 +9,8 @@ import java.awt.image.BufferedImage;
  */
 public class CdcTrayIcon implements Runnable {
 
+    private TrayIcon trayIcon = null;
+
     private void createAndShowGUI() throws AWTException {
         final SystemTray tray = SystemTray.getSystemTray();
 
@@ -16,7 +18,7 @@ public class CdcTrayIcon implements Runnable {
 
         // Create inner items
         final PopupMenu popup = new PopupMenu();
-        TrayIcon trayIcon = new TrayIcon(createImage(trayIconSize));
+        this.trayIcon = new TrayIcon(createImage(trayIconSize));
 
         // Create contents and add items
         MenuItem exitItem = new MenuItem("Exit");
@@ -27,13 +29,12 @@ public class CdcTrayIcon implements Runnable {
         tray.add(trayIcon);
 
         // Action listeners
-        trayIcon.addActionListener(e -> JOptionPane.showMessageDialog(null, "Hello, world!"));
         exitItem.addActionListener(e -> {
             tray.remove(trayIcon);
             System.exit(0);
         });
         startTimer.addActionListener(e -> {
-            SwingWorker worker = createTimeoutWorker(3000, "Timeout expired!", 0);
+            SwingWorker worker = createTimeoutWorker(3000, "The delay has expired.", 0);
             worker.execute();
         });
     }
@@ -56,7 +57,7 @@ public class CdcTrayIcon implements Runnable {
                     @Override
                     protected Void doInBackground() throws Exception {
                         Timer timeout = new Timer(delaySecs, e -> {
-                            JOptionPane.showMessageDialog(null, finishMessage);
+                            trayIcon.displayMessage("Timer expired!", finishMessage, TrayIcon.MessageType.INFO);
                         });
                         timeout.setRepeats(repeatDelay > 0);
                         if (repeatDelay > 0) {
