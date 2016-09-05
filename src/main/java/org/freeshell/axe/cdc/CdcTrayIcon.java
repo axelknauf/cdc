@@ -5,11 +5,42 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 
 /**
- * Created by ax on 19.08.16.
+ * UI class implementing the (runnable) System tray icon class.
+ * FIXME: extract action listeners, make configurable etc.
  */
 public class CdcTrayIcon implements Runnable {
 
+    // Initial config
+    private Configuration config = null;
+
+    // Dependent fields
+    private ImageProvider imageProvider = null;
+
+    // UI elements
     private TrayIcon trayIcon = null;
+
+    /**
+     * Initializes a new instance of this class with the given Configuration.
+     *
+     * @param cfg the {@link Configuration} for this icon
+     */
+    public CdcTrayIcon(Configuration cfg) {
+        this.config = cfg;
+        initConfig();
+    }
+
+    private void initConfig() {
+        try {
+            String imageProviderClassName = config.getString(Configuration.IMAGE_PROVIDER);
+            @SuppressWarnings("unchecked") Class<ImageProvider> imageProviderClass = (Class<ImageProvider>) Class.forName(imageProviderClassName);
+            imageProvider = imageProviderClass.newInstance();
+        } catch (ClassNotFoundException|InstantiationException|IllegalAccessException e) {
+            // FIXME: use fallback instead of crashing
+            System.err.println("Cannot instantiate ImageProvider class: " + e.getMessage());
+            e.printStackTrace(System.err);
+            System.exit(1);
+        }
+    }
 
     private void createAndShowGUI() throws AWTException {
         final SystemTray tray = SystemTray.getSystemTray();
@@ -18,7 +49,7 @@ public class CdcTrayIcon implements Runnable {
 
         // Create inner items
         final PopupMenu popup = new PopupMenu();
-        this.trayIcon = new TrayIcon(createImage(trayIconSize));
+        this.trayIcon = new TrayIcon(imageProvider.createImage(trayIconSize));
 
         // Create contents and add items
         MenuItem exitItem = new MenuItem("Exit");
@@ -69,31 +100,6 @@ public class CdcTrayIcon implements Runnable {
                 };
     }
 
-    /**
-     * Creates a tray icon for the give size dimensions.
-     *
-     * @param trayIconSize the system tray's dimension
-     *
-     * @return a generated image
-     */
-    private Image createImage(Dimension trayIconSize) {
-        int w = (int) trayIconSize.getWidth();
-        int h = (int) trayIconSize.getHeight();
-
-        Image image = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
-
-        Graphics graphics = image.getGraphics();
-
-        graphics.setColor(Color.GREEN);
-        graphics.fillRect(0, 0, w, h);
-
-        graphics.setColor(Color.RED);
-        graphics.fillArc(w / 2, h / 2, (w / 2) - (w / 10) , (h / 2) - (h / 10), 0, 360);
-
-        image.flush();
-
-        return image;
-    }
 
     @Override
     public void run() {
