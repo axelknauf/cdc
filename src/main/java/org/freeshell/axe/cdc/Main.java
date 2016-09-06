@@ -13,7 +13,7 @@ public class Main {
         }
 
         // Put UI on event-dispatching thread
-        SwingUtilities.invokeLater(new CdcTrayIcon());
+        SwingUtilities.invokeLater(new CdcTrayIcon(new Configuration()));
     }
 
 }
