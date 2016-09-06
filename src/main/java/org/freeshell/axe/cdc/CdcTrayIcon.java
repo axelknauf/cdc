@@ -2,13 +2,12 @@ package org.freeshell.axe.cdc;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.image.BufferedImage;
 
 /**
  * UI class implementing the (runnable) System tray icon class.
  * FIXME: extract action listeners, make configurable etc.
  */
-public class CdcTrayIcon implements Runnable {
+public class CdcTrayIcon implements Runnable, ConfigurationConstants {
 
     // Initial config
     private Configuration config = null;
@@ -31,7 +30,7 @@ public class CdcTrayIcon implements Runnable {
 
     private void initConfig() {
         try {
-            String imageProviderClassName = config.getString(Configuration.IMAGE_PROVIDER);
+            String imageProviderClassName = config.getString(ConfigurationConstants.KEY_IMAGE_PROVIDER);
             @SuppressWarnings("unchecked") Class<ImageProvider> imageProviderClass = (Class<ImageProvider>) Class.forName(imageProviderClassName);
             imageProvider = imageProviderClass.newInstance();
         } catch (ClassNotFoundException|InstantiationException|IllegalAccessException e) {
@@ -65,7 +64,7 @@ public class CdcTrayIcon implements Runnable {
             System.exit(0);
         });
         startTimer.addActionListener(e -> {
-            SwingWorker worker = createTimeoutWorker(3000, "The delay has expired.", 0);
+            SwingWorker worker = createTimeoutWorker(3000, config.getString(KEY_TIMEOUT_MESSAGE), 0);
             worker.execute();
         });
     }
