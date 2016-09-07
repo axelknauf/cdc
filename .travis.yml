@@ -1,2 +1,4 @@
 language: java
-script: clean package
+script:
+- jdk_switcher use oraclejdk8
+- mvn clean package
